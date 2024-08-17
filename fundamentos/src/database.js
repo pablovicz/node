@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 const databasePath = new URL('db.json', import.meta.url);
 
 
-export class Database {
+class Database {
 
     // # -> make private
     #database = {}
@@ -23,9 +23,19 @@ export class Database {
         fs.writeFile(databasePath, JSON.stringify(this.#database));
     }
 
-    select(table) {
+    select(table, search) {
 
-        const data = this.#database[table] ?? [];
+        let data = this.#database[table] ?? [];
+
+        if (search) {
+            data = data.filter(row => {
+                return Object.entries(search).some(([key, value]) => {
+
+                    return row[key]?.toLowerCase().includes(value.toLowerCase())
+                })
+            })
+        }
+
         return data;
     }
 
@@ -43,14 +53,30 @@ export class Database {
         return insertData;
     }
 
-    delete(table, uuid){
+    delete(table, uuid) {
 
         const rowIndex = this.#database[table].findIndex(row => row.uuid === uuid);
 
-        if(rowIndex > -1 ){
+        if (rowIndex > -1) {
 
             this.#database[table].splice(rowIndex, 1);
             this.#persist();
         }
     }
+
+    update(table, uuid, data) {
+
+
+        const rowIndex = this.#database[table].findIndex(row => row.uuid === uuid);
+
+        if (rowIndex > -1) {
+            const current = this.#database[table][rowIndex];
+            this.#database[table][rowIndex] = Object.assign(current, data);
+            this.#persist();
+        }
+    }
 }
+
+
+
+export const database = new Database();

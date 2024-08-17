@@ -1,13 +1,13 @@
-import { Database } from "./database.js";
+import { database } from "./database.js";
 
-const database = new Database();
 
 export const routes = [
     {
         method: 'GET',
         path: '/users',
         handler: (req, res) => {
-            const users = database.select('users')
+            const search = req.query;
+            const users = database.select('users', search)
             return res.end(JSON.stringify(users));
         }
     },
@@ -28,9 +28,21 @@ export const routes = [
         handler: (req, res) => {
             const { uuid } = req.params;
 
+            console.log('aqui', uuid)
             database.delete('users', uuid)
 
             return res.writeHead(204).end();
+        }
+    },
+    {
+        method: 'PUT',
+        path: '/user/:uuid',
+        handler: (req, res) => {
+            const { uuid } = req.params;
+
+            database.update('users', uuid, req.body)
+
+            return res.writeHead(202).end();
         }
     }
 ]
